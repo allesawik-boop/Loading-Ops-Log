@@ -467,7 +467,7 @@
 
   // ---------- reset ----------
   document.getElementById("resetBtn").addEventListener("click", ()=>{
-    if (!confirm("Clear everything for the next crossing?")) return;
+    if (!confirm("Clear everything?")) return;
     state.deck = null; state.stamps = {}; state.issues = [];
     state.counts = {out:0, in:0, tugs:0};
     document.querySelectorAll("#deckSeg button").forEach(b=>b.classList.remove("on"));
