@@ -298,7 +298,7 @@
 
   <section>
     <p class="sec-label">Additional remarks</p>
-    <textarea id="remarks" placeholder="Weather, delays, traffic notes, anything the Master should know…"></textarea>
+    <textarea id="remarks" placeholder="Nature of incident or any other events affecting the turnaround time…"></textarea>
   </section>
 
 </main>
@@ -470,7 +470,7 @@
 
   // ---------- reset ----------
   document.getElementById("resetBtn").addEventListener("click", ()=>{
-    if (!confirm("Clear everything for the next crossing?")) return;
+    if (!confirm("Clear everything?")) return;
     state.deck = null; state.stamps = {}; state.issues = [];
     state.counts = {out:0, in:0, tugs:0};
     document.querySelectorAll("#deckSeg button").forEach(b=>b.classList.remove("on"));
