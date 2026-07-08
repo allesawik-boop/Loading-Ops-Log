@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#14181d">
+<title>Deck Ops Log</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&family=Saira+Semi+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --deck:#14181d;        /* wet deck steel, night */
+    --panel:#1d232a;
+    --panel-2:#232a32;
+    --line:#39424c;
+    --ink:#e8ecef;
+    --ink-dim:#93a0ab;
+    --hiviz:#ffb400;       /* hi-viz amber */
+    --hiviz-ink:#1a1200;
+    --go:#59c26a;          /* stamped / complete */
+    --alert:#ff5a4e;       /* incident */
+    --radius:10px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0;}
+  body{
+    background:var(--deck);
+    color:var(--ink);
+    font-family:'Saira Semi Condensed', -apple-system, 'Segoe UI', Roboto, sans-serif;
+    font-size:16px;
+    padding-bottom:110px; /* room for sticky send bar */
+  }
+  /* ---------- header ---------- */
+  header{
+    position:sticky; top:0; z-index:20;
+    background:var(--deck);
+    border-bottom:1px solid var(--line);
+  }
+  .chevrons{
+    height:10px;
+    background:repeating-linear-gradient(135deg, var(--hiviz) 0 14px, #14181d 14px 28px);
+  }
+  .head-row{
+    display:flex; align-items:baseline; justify-content:space-between;
+    padding:10px 16px 8px;
+  }
+  h1{
+    font-family:'Saira Stencil One', 'Saira Semi Condensed', sans-serif;
+    font-size:22px; letter-spacing:2px; margin:0; font-weight:400;
+    color:var(--hiviz);
+  }
+  #clock{
+    font-variant-numeric:tabular-nums;
+    font-weight:700; font-size:20px; color:var(--ink);
+  }
+  #dateline{
+    padding:0 16px 8px; color:var(--ink-dim); font-size:13px;
+    letter-spacing:1px; text-transform:uppercase;
+  }
+  /* ---------- sections ---------- */
+  main{padding:12px 12px 0;}
+  section{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:12px;
+    margin-bottom:12px;
+  }
+  .sec-label{
+    font-size:12px; letter-spacing:2px; text-transform:uppercase;
+    color:var(--ink-dim); margin:0 0 10px 2px; font-weight:700;
+  }
+  /* ---------- selects ---------- */
+  .field{margin-bottom:12px;}
+  .field:last-child{margin-bottom:0;}
+  select{
+    width:100%; padding:14px 12px;
+    background:var(--panel-2); color:var(--ink);
+    border:1px solid var(--line); border-radius:var(--radius);
+    font-family:inherit; font-size:17px; font-weight:600;
+    appearance:none;
+    background-image:linear-gradient(45deg, transparent 50%, var(--hiviz) 50%),
+                     linear-gradient(135deg, var(--hiviz) 50%, transparent 50%);
+    background-position:calc(100% - 22px) 50%, calc(100% - 16px) 50%;
+    background-size:6px 6px, 6px 6px;
+    background-repeat:no-repeat;
+  }
+  .seg{display:flex; gap:8px;}
+  .seg button{
+    flex:1; padding:16px 0;
+    font-family:'Saira Stencil One', sans-serif; font-size:20px; letter-spacing:1px;
+    background:var(--panel-2); color:var(--ink-dim);
+    border:1px solid var(--line); border-radius:var(--radius);
+  }
+  .seg button.on{
+    background:var(--hiviz); color:var(--hiviz-ink); border-color:var(--hiviz);
+  }
+  /* ---------- timestamp buttons ---------- */
+  .pair{display:flex; gap:8px; margin-bottom:8px;}
+  .pair:last-child{margin-bottom:0;}
+  .stamp{
+    flex:1; min-height:72px; padding:8px 6px;
+    background:var(--panel-2); color:var(--ink);
+    border:1px solid var(--line); border-radius:var(--radius);
+    font-family:inherit; text-align:center;
+    display:flex; flex-direction:column; justify-content:center; gap:3px;
+  }
+  .stamp .lbl{font-size:15px; font-weight:700; letter-spacing:.5px;}
+  .stamp .t{
+    font-size:22px; font-weight:700; font-variant-numeric:tabular-nums;
+    color:var(--ink-dim);
+  }
+  .stamp.done{border-color:var(--go); background:#1c2a20;}
+  .stamp.done .t{color:var(--go);}
+  .stamp.arm{border-color:var(--hiviz);}
+  .stamp.arm .t{color:var(--hiviz); font-size:13px; font-weight:600;}
+  /* ---------- steppers ---------- */
+  .stepper-row{display:flex; gap:8px;}
+  .stepper{flex:1; text-align:center;}
+  .stepper .name{font-size:13px; color:var(--ink-dim); font-weight:700;
+    text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;}
+  .stepper .ctrl{
+    display:flex; align-items:stretch;
+    border:1px solid var(--line); border-radius:var(--radius); overflow:hidden;
+    background:var(--panel-2);
+  }
+  .stepper .ctrl button{
+    width:44px; min-height:56px; font-size:26px; font-weight:700;
+    background:transparent; color:var(--hiviz); border:none;
+  }
+  .stepper .val{
+    flex:1; display:flex; align-items:center; justify-content:center;
+    font-size:26px; font-weight:700; font-variant-numeric:tabular-nums;
+  }
+  /* ---------- issues ---------- */
+  .issues{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .issue{
+    position:relative; min-height:60px;
+    background:var(--panel-2); color:var(--ink);
+    border:1px solid var(--line); border-radius:var(--radius);
+    font-family:inherit; font-size:16px; font-weight:700;
+  }
+  .issue{font-size:15px; line-height:1.25; padding:8px 4px;}
+  .issue small{
+    display:inline-block; margin-top:3px;
+    font-size:11px; letter-spacing:2px; font-weight:700;
+    color:var(--go);
+  }
+  .issue.stop small{color:var(--alert);}
+  .issue.incident{color:var(--alert); border-color:#5a2622;}
+  .issue .badge{
+    position:absolute; top:-8px; right:-6px;
+    min-width:24px; height:24px; padding:0 6px;
+    background:var(--hiviz); color:var(--hiviz-ink);
+    border-radius:12px; font-size:14px; line-height:24px;
+    display:none;
+  }
+  .issue.incident .badge{background:var(--alert); color:#fff;}
+  #issueLog{list-style:none; margin:10px 0 0; padding:0; font-size:14px;}
+  #issueLog li{
+    display:flex; gap:10px; padding:7px 4px;
+    border-top:1px dashed var(--line); align-items:center;
+  }
+  #issueLog .lt{font-variant-numeric:tabular-nums; font-weight:700; color:var(--hiviz);}
+  #issueLog .del{
+    margin-left:auto; background:none; border:none; color:var(--ink-dim);
+    font-size:18px; padding:2px 8px;
+  }
+  /* ---------- remarks ---------- */
+  textarea{
+    width:100%; min-height:88px; padding:12px;
+    background:var(--panel-2); color:var(--ink);
+    border:1px solid var(--line); border-radius:var(--radius);
+    font-family:inherit; font-size:16px; resize:vertical;
+  }
+  /* ---------- send bar ---------- */
+  .sendbar{
+    position:fixed; left:0; right:0; bottom:0; z-index:30;
+    padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+    background:linear-gradient(transparent, var(--deck) 30%);
+    display:flex; gap:8px;
+  }
+  #sendBtn{
+    flex:1; padding:18px 0;
+    font-family:'Saira Stencil One', sans-serif; font-size:20px; letter-spacing:2px;
+    background:var(--hiviz); color:var(--hiviz-ink);
+    border:none; border-radius:var(--radius);
+    box-shadow:0 4px 18px rgba(255,180,0,.25);
+  }
+  #resetBtn{
+    width:84px; font-size:14px; font-weight:700;
+    background:var(--panel-2); color:var(--ink-dim);
+    border:1px solid var(--line); border-radius:var(--radius);
+  }
+  button:active{transform:scale(.97);}
+  .toast{
+    position:fixed; left:50%; bottom:120px; transform:translateX(-50%);
+    background:var(--panel-2); border:1px solid var(--hiviz);
+    color:var(--ink); padding:10px 18px; border-radius:var(--radius);
+    font-size:15px; z-index:40; opacity:0; pointer-events:none;
+    transition:opacity .25s;
+  }
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="chevrons"></div>
+  <div class="head-row">
+    <h1>DECK OPS LOG</h1>
+    <div id="clock">--:--</div>
+  </div>
+  <div id="dateline"></div>
+</header>
+
+<main>
+
+  <section>
+    <p class="sec-label">Vessel &amp; deck</p>
+    <div class="field">
+      <select id="ship">
+        <option value="oscar.master@matrixmarine.eu">MV Oscar Wilde — oscar.master@matrixmarine.eu</option>
+        <option value="inishmore.master@matrixmarine.eu">MV Inishmore — inishmore.master@matrixmarine.eu</option>
+      </select>
+    </div>
+    <div class="seg" id="deckSeg">
+      <button data-deck="Deck 3">DECK 3</button>
+      <button data-deck="Deck 5">DECK 5</button>
+    </div>
+  </section>
+
+  <section>
+    <p class="sec-label">Operation timestamps</p>
+    <div class="pair">
+      <button class="stamp" id="s_dis_start"><span class="lbl">Start discharging</span><span class="t">— tap to stamp —</span></button>
+      <button class="stamp" id="s_dis_end"><span class="lbl">Finish discharging</span><span class="t">— tap to stamp —</span></button>
+    </div>
+    <div class="pair">
+      <button class="stamp" id="s_drop_start"><span class="lbl">Start drops</span><span class="t">— tap to stamp —</span></button>
+      <button class="stamp" id="s_drop_end"><span class="lbl">Finish drops</span><span class="t">— tap to stamp —</span></button>
+    </div>
+    <div class="pair">
+      <button class="stamp" id="s_load_start"><span class="lbl">Start loading</span><span class="t">— tap to stamp —</span></button>
+      <button class="stamp" id="s_load_end"><span class="lbl">Finish loading</span><span class="t">— tap to stamp —</span></button>
+    </div>
+  </section>
+
+  <section>
+    <p class="sec-label">Drops</p>
+    <div class="stepper-row">
+      <div class="stepper">
+        <div class="name">Drops out</div>
+        <div class="ctrl">
+          <button onclick="step('out',-1)">−</button>
+          <div class="val" id="v_out">0</div>
+          <button onclick="step('out',1)">+</button>
+        </div>
+      </div>
+      <div class="stepper">
+        <div class="name">Drops in</div>
+        <div class="ctrl">
+          <button onclick="step('in',-1)">−</button>
+          <div class="val" id="v_in">0</div>
+          <button onclick="step('in',1)">+</button>
+        </div>
+      </div>
+      <div class="stepper">
+        <div class="name">Tugs</div>
+        <div class="ctrl">
+          <button onclick="step('tugs',-1)">−</button>
+          <div class="val" id="v_tugs">0</div>
+          <button onclick="step('tugs',1)">+</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="sec-label">Issues during loading</p>
+    <div class="issues">
+      <button class="issue" data-issue="Wrong Haz">Wrong Haz<span class="badge"></span></button>
+      <button class="issue" data-issue="Cross Traffic">Cross Traffic<span class="badge"></span></button>
+      <button class="issue" data-issue="Empty Linkspan START">Empty Linkspan<br><small>START</small><span class="badge"></span></button>
+      <button class="issue stop" data-issue="Empty Linkspan STOP">Empty Linkspan<br><small>STOP</small><span class="badge"></span></button>
+      <button class="issue" data-issue="Garbage/Delivery START">Garbage/Delivery<br><small>START</small><span class="badge"></span></button>
+      <button class="issue stop" data-issue="Garbage/Delivery STOP">Garbage/Delivery<br><small>STOP</small><span class="badge"></span></button>
+      <button class="issue" data-issue="Cargo - wrong berth">Cargo — wrong berth<span class="badge"></span></button>
+      <button class="issue incident" data-issue="Incident">Incident<span class="badge"></span></button>
+    </div>
+    <ul id="issueLog"></ul>
+  </section>
+
+  <section>
+    <p class="sec-label">Additional remarks</p>
+    <textarea id="remarks" placeholder="Weather, delays, traffic notes, anything the Master should know…"></textarea>
+  </section>
+
+</main>
+
+<div class="sendbar">
+  <button id="resetBtn">RESET</button>
+  <button id="sendBtn">SEND REPORT</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ---------- state (in memory for this crossing) ----------
+  const state = {
+    deck: null,
+    stamps: {},          // id -> "HH:MM"
+    counts: {out:0, in:0, tugs:0},
+    issues: [],          // {t:"HH:MM", label:""}
+  };
+
+  const STAMP_LABELS = {
+    s_dis_start:"Start discharging", s_dis_end:"Finish discharging",
+    s_drop_start:"Start drops",      s_drop_end:"Finish drops",
+    s_load_start:"Start loading",    s_load_end:"Finish loading",
+  };
+
+  const pad = n => String(n).padStart(2,"0");
+  const now = () => { const d=new Date(); return pad(d.getHours())+":"+pad(d.getMinutes()); };
+  const buzz = () => { if (navigator.vibrate) navigator.vibrate(30); };
+
+  // ---------- clock ----------
+  function tick(){
+    document.getElementById("clock").textContent = now();
+    const d = new Date();
+    document.getElementById("dateline").textContent =
+      d.toLocaleDateString("en-GB",{weekday:"short", day:"2-digit", month:"short", year:"numeric"}) + " · ship's local time";
+  }
+  tick(); setInterval(tick, 1000);
+
+  // ---------- deck segmented control ----------
+  document.querySelectorAll("#deckSeg button").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      state.deck = b.dataset.deck;
+      document.querySelectorAll("#deckSeg button").forEach(x=>x.classList.toggle("on", x===b));
+      buzz();
+    });
+  });
+
+  // ---------- timestamp buttons ----------
+  document.querySelectorAll(".stamp").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const id = btn.id;
+      const tEl = btn.querySelector(".t");
+      if (!state.stamps[id]){
+        state.stamps[id] = now();
+        tEl.textContent = state.stamps[id];
+        btn.classList.add("done");
+        buzz();
+      } else if (!btn.classList.contains("arm")){
+        // already stamped — arm overwrite
+        btn.classList.add("arm");
+        tEl.textContent = "tap again to overwrite " + state.stamps[id];
+        setTimeout(()=>{
+          if (btn.classList.contains("arm")){
+            btn.classList.remove("arm");
+            tEl.textContent = state.stamps[id];
+          }
+        }, 3000);
+      } else {
+        state.stamps[id] = now();
+        btn.classList.remove("arm");
+        tEl.textContent = state.stamps[id];
+        buzz();
+      }
+    });
+  });
+
+  // ---------- steppers ----------
+  function step(key, d){
+    state.counts[key] = Math.max(0, state.counts[key] + d);
+    document.getElementById("v_"+key).textContent = state.counts[key];
+    buzz();
+  }
+
+  // ---------- issues ----------
+  document.querySelectorAll(".issue").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      state.issues.push({t: now(), label: btn.dataset.issue});
+      renderIssues();
+      buzz();
+    });
+  });
+
+  function renderIssues(){
+    // badges
+    document.querySelectorAll(".issue").forEach(btn=>{
+      const n = state.issues.filter(i=>i.label===btn.dataset.issue).length;
+      const badge = btn.querySelector(".badge");
+      badge.style.display = n ? "block" : "none";
+      badge.textContent = n;
+    });
+    // log
+    const ul = document.getElementById("issueLog");
+    ul.innerHTML = "";
+    state.issues.forEach((i,idx)=>{
+      const li = document.createElement("li");
+      li.innerHTML = '<span class="lt">'+i.t+'</span><span>'+i.label+'</span>';
+      const del = document.createElement("button");
+      del.className = "del"; del.textContent = "×";
+      del.onclick = ()=>{ state.issues.splice(idx,1); renderIssues(); };
+      li.appendChild(del);
+      ul.appendChild(li);
+    });
+  }
+
+  // ---------- toast ----------
+  let toastTimer;
+  function toast(msg){
+    const t = document.getElementById("toast");
+    t.textContent = msg; t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>t.classList.remove("show"), 2600);
+  }
+
+  // ---------- report ----------
+  function buildReport(){
+    const d = new Date();
+    const dateStr = d.toLocaleDateString("en-GB",{day:"2-digit", month:"short", year:"numeric"});
+    const s = state.stamps;
+    const line = (a,b) => (s[a]||"--:--") + " - " + (s[b]||"--:--");
+    const rows = [
+      "CARGO OPERATIONS REPORT",
+      "Date: " + dateStr,
+      "Deck: " + (state.deck || "not selected"),
+      "",
+      "DISCHARGING: " + line("s_dis_start","s_dis_end"),
+      "DROPS:       " + line("s_drop_start","s_drop_end"),
+      "  Drops out: " + state.counts.out +
+      "  |  Drops in: " + state.counts.in +
+      "  |  Tugs: " + state.counts.tugs,
+      "LOADING:     " + line("s_load_start","s_load_end"),
+      "",
+      "ISSUES DURING LOADING:",
+    ];
+    if (state.issues.length){
+      state.issues.forEach(i=>rows.push("  " + i.t + "  " + i.label));
+    } else {
+      rows.push("  None reported");
+    }
+    rows.push("");
+    rows.push("REMARKS:");
+    rows.push(document.getElementById("remarks").value.trim() || "  None");
+    rows.push("");
+    rows.push("Sent from Deck Ops Log");
+    return rows.join("\n");
+  }
+
+  document.getElementById("sendBtn").addEventListener("click", ()=>{
+    if (!state.deck){ toast("Select Deck 3 or Deck 5 first"); return; }
+    const to = document.getElementById("ship").value;
+    const d = new Date();
+    const subject = "Cargo Ops Report - " + state.deck + " - " +
+      d.toLocaleDateString("en-GB",{day:"2-digit", month:"short", year:"numeric"});
+    const href = "mailto:" + to +
+      "?subject=" + encodeURIComponent(subject) +
+      "&body=" + encodeURIComponent(buildReport());
+    window.location.href = href;
+  });
+
+  // ---------- reset ----------
+  document.getElementById("resetBtn").addEventListener("click", ()=>{
+    if (!confirm("Clear everything for the next crossing?")) return;
+    state.deck = null; state.stamps = {}; state.issues = [];
+    state.counts = {out:0, in:0, tugs:0};
+    document.querySelectorAll("#deckSeg button").forEach(b=>b.classList.remove("on"));
+    document.querySelectorAll(".stamp").forEach(b=>{
+      b.classList.remove("done","arm");
+      b.querySelector(".t").textContent = "— tap to stamp —";
+    });
+    ["out","in","tugs"].forEach(k=>document.getElementById("v_"+k).textContent="0");
+    renderIssues();
+    document.getElementById("remarks").value = "";
+    toast("Ready for next crossing");
+  });
+</script>
+</body>
+</html>
