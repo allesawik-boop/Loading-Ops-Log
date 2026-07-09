@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#14181d">
-<title>Loading Ops Log</title>
+<title>Deck Ops Log</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
@@ -198,6 +198,51 @@
     border:1px solid var(--line); border-radius:var(--radius);
   }
   button:active{transform:scale(.97);}
+  /* ---------- views & home ---------- */
+  .view{display:none;}
+  .view.active{display:block;}
+  .home-menu{display:flex; flex-direction:column; gap:14px; padding-top:28px;}
+  .home-btn{
+    min-height:110px; border-radius:var(--radius);
+    background:var(--panel); border:1px solid var(--line);
+    color:var(--ink); font-family:'Saira Stencil One', sans-serif;
+    font-size:24px; letter-spacing:2px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+  }
+  .home-btn small{
+    font-family:'Saira Semi Condensed', sans-serif;
+    font-size:13px; letter-spacing:1px; color:var(--ink-dim); font-weight:600;
+  }
+  .home-btn:first-child{border-color:var(--hiviz);}
+  .back-btn{
+    background:none; border:none; color:var(--hiviz);
+    font-family:inherit; font-size:15px; font-weight:700;
+    padding:2px 2px 12px; letter-spacing:1px;
+  }
+  /* ---------- pre-stow ---------- */
+  .ps-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .ps-cell{display:block;}
+  .ps-cell .name{
+    font-size:13px; color:var(--ink-dim); font-weight:700;
+    text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; text-align:center;
+  }
+  .ps-cell input{
+    width:100%; min-height:56px; padding:6px 10px;
+    background:var(--panel-2); color:var(--ink);
+    border:1px solid var(--line); border-radius:var(--radius);
+    font-family:inherit; font-size:26px; font-weight:700;
+    font-variant-numeric:tabular-nums; text-align:center;
+  }
+  .ps-cell input:focus{outline:none; border-color:var(--hiviz);}
+  .ps-cell input::placeholder{color:var(--line);}
+  .ps-total{
+    margin-top:12px; padding:12px; text-align:center;
+    border:1px dashed var(--line); border-radius:var(--radius);
+    font-size:15px; color:var(--ink-dim); font-weight:700;
+    text-transform:uppercase; letter-spacing:1px;
+  }
+  .ps-total b{color:var(--hiviz); font-size:22px; margin-left:8px;}
+
   .toast{
     position:fixed; left:50%; bottom:120px; transform:translateX(-50%);
     background:var(--panel-2); border:1px solid var(--hiviz);
@@ -213,21 +258,115 @@
 <header>
   <div class="chevrons"></div>
   <div class="head-row">
-    <h1>LOADING OPS LOG</h1>
-    <div id="clock">--:--</div>
+    <h1>DECK OPS LOG</h1>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <button id="homeBtn" onclick="showView('home')" style="display:none; background:var(--panel-2); border:1px solid var(--hiviz); border-radius:8px; color:var(--hiviz); font-family:inherit; font-size:13px; font-weight:700; letter-spacing:1px; padding:8px 12px;">HOME</button>
+      <div id="clock">--:--</div>
+    </div>
   </div>
   <div id="dateline"></div>
 </header>
 
 <main>
 
+  <!-- ============ HOME ============ -->
+  <div class="view active" id="view-home">
+    <div class="home-menu">
+      <button class="home-btn" onclick="showView('ops')">LOADING OPS LOG<small>Timestamps · drops · issues · report</small></button>
+      <button class="home-btn" onclick="showView('prestow')">PRE-STOW<small>Planned cargo figures by category</small></button>
+    </div>
+  </div>
+
+  <!-- ============ PRE-STOW ============ -->
+  <div class="view" id="view-prestow">
+    <button class="back-btn" onclick="showView('home')">&#8249; HOME</button>
+
+    <section>
+      <p class="sec-label">Vessel · port · deck</p>
+      <div class="field">
+        <select id="psShip">
+          <option value="oscar.master@matrixmarine.eu,oscar.bridge@matrixmarine.eu,oscar.reception@matrixmarine.eu">Oscar Wilde — master / bridge / reception</option>
+          <option value="inishmore.master@matrixmarine.eu,inishmore.bridge@matrixmarine.eu,inishmore.reception@matrixmarine.eu">Isle of Inishmore — master / bridge / reception</option>
+        </select>
+      </div>
+      <div class="seg" id="psPortSeg" style="margin-bottom:8px;">
+        <button data-port="Dover">DOVER</button>
+        <button data-port="Calais">CALAIS</button>
+      </div>
+      <div class="seg" id="psDeckSeg">
+        <button data-deck="Deck 3">DECK 3</button>
+        <button data-deck="Deck 5">DECK 5</button>
+      </div>
+    </section>
+
+    <section>
+      <p class="sec-label">Pre-stow figures</p>
+      <div class="ps-grid">
+        <label class="ps-cell">
+          <span class="name">Drops</span>
+          <input type="number" inputmode="numeric" min="0" max="999" id="ps_drops" placeholder="0">
+        </label>
+        <label class="ps-cell">
+          <span class="name">Clean artics</span>
+          <input type="number" inputmode="numeric" min="0" max="999" id="ps_clean" placeholder="0">
+        </label>
+        <label class="ps-cell">
+          <span class="name">Plug-ins</span>
+          <input type="number" inputmode="numeric" min="0" max="999" id="ps_plugins" placeholder="0">
+        </label>
+        <label class="ps-cell">
+          <span class="name">Horseboxes</span>
+          <input type="number" inputmode="numeric" min="0" max="999" id="ps_horse" placeholder="0">
+        </label>
+        <label class="ps-cell">
+          <span class="name">Low loaders</span>
+          <input type="number" inputmode="numeric" min="0" max="999" id="ps_low" placeholder="0">
+        </label>
+        <label class="ps-cell">
+          <span class="name">Road trains</span>
+          <input type="number" inputmode="numeric" min="0" max="999" id="ps_road" placeholder="0">
+        </label>
+        <label class="ps-cell">
+          <span class="name">Hazardous</span>
+          <input type="number" inputmode="numeric" min="0" max="999" id="ps_haz" placeholder="0">
+        </label>
+        <label class="ps-cell">
+          <span class="name">Rigids</span>
+          <input type="number" inputmode="numeric" min="0" max="999" id="ps_rigids" placeholder="0">
+        </label>
+        <label class="ps-cell">
+          <span class="name">Coaches</span>
+          <input type="number" inputmode="numeric" min="0" max="999" id="ps_coaches" placeholder="0">
+        </label>
+        <label class="ps-cell">
+          <span class="name">Cars</span>
+          <input type="number" inputmode="numeric" min="0" max="999" id="ps_cars" placeholder="0">
+        </label>
+      </div>
+      <div class="ps-total">Total units<b id="psTotal">0</b></div>
+    </section>
+
+    <section>
+      <p class="sec-label">Pre-stow remarks</p>
+      <textarea id="psRemarks" placeholder="Stowage notes, special cargo, restrictions…"></textarea>
+    </section>
+  </div>
+
+  <!-- ============ OPS LOG ============ -->
+  <div class="view" id="view-ops">
+  <button class="back-btn" onclick="showView('home')">&#8249; HOME</button>
+
   <section>
-    <p class="sec-label">Vessel &amp; deck</p>
+    <p class="sec-label">Vessel · port · deck</p>
     <div class="field">
       <select id="ship">
-        <option value="oscar.master@matrixmarine.eu">MV Oscar Wilde — oscar.master@matrixmarine.eu</option>
-        <option value="inishmore.master@matrixmarine.eu">MV Inishmore — inishmore.master@matrixmarine.eu</option>
+        <option value="oscar.master@matrixmarine.eu">Oscar Wilde — master</option>
+        <option value="inishmore.master@matrixmarine.eu">Isle of Inishmore — master</option>
       </select>
+    </div>
+    <div class="seg" id="portSeg" style="margin-bottom:8px;">
+      <button data-port="Dover">DOVER</button>
+      <button data-port="Calais">CALAIS</button>
     </div>
     <div class="seg" id="deckSeg">
       <button data-deck="Deck 3">DECK 3</button>
@@ -298,8 +437,9 @@
 
   <section>
     <p class="sec-label">Additional remarks</p>
-    <textarea id="remarks" placeholder="Nature of an incident or any other events affecting the turnaround time…"></textarea>
+    <textarea id="remarks" placeholder="Weather, delays, traffic notes, anything the Master should know…"></textarea>
   </section>
+  </div><!-- /view-ops -->
 
 </main>
 
@@ -311,13 +451,128 @@
 <div class="toast" id="toast"></div>
 
 <script>
+  // ---------- views ----------
+  let currentView = "home";
+  function showView(name){
+    currentView = name;
+    ["home","prestow","ops"].forEach(v=>{
+      document.getElementById("view-"+v).classList.toggle("active", v===name);
+    });
+    const bar = document.querySelector(".sendbar");
+    bar.style.display = (name==="home") ? "none" : "flex";
+    document.getElementById("homeBtn").style.display = (name==="home") ? "none" : "block";
+    document.getElementById("sendBtn").textContent =
+      (name==="prestow") ? "SEND PRE-STOW" : "SEND REPORT";
+    window.scrollTo(0,0);
+  }
+
+  // ---------- pre-stow state ----------
+  const psState = {
+    deck: null,
+    port: null,
+  };
+  const PS_LABELS = {
+    drops:"Drops", clean:"Clean artics", plugins:"Plug-ins",
+    horse:"Horseboxes", low:"Low loaders", road:"Road trains",
+    haz:"Hazardous", rigids:"Rigids", coaches:"Coaches", cars:"Cars",
+  };
+  const psVal = k => Math.max(0, parseInt(document.getElementById("ps_"+k).value, 10) || 0);
+
+  function updatePsTotal(){
+    const total = Object.keys(PS_LABELS).reduce((sum,k)=>sum+psVal(k), 0);
+    document.getElementById("psTotal").textContent = total;
+  }
+  Object.keys(PS_LABELS).forEach(k=>{
+    document.getElementById("ps_"+k).addEventListener("input", updatePsTotal);
+  });
+
+  document.querySelectorAll("#psPortSeg button").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      psState.port = b.dataset.port;
+      document.querySelectorAll("#psPortSeg button").forEach(x=>x.classList.toggle("on", x===b));
+      buzz();
+    });
+  });
+
+  document.querySelectorAll("#psDeckSeg button").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      psState.deck = b.dataset.deck;
+      document.querySelectorAll("#psDeckSeg button").forEach(x=>x.classList.toggle("on", x===b));
+      buzz();
+    });
+  });
+
+  function buildPreStow(){
+    const d = new Date();
+    const dateStr = d.toLocaleDateString("en-GB",{day:"2-digit", month:"short", year:"numeric"});
+    const rows = [
+      "PRE-STOW",
+      "Date: " + dateStr,
+      "Port of loading: " + (psState.port || "not selected"),
+      "Deck: " + (psState.deck || "not selected"),
+      "",
+    ];
+    let total = 0;
+    Object.keys(PS_LABELS).forEach(k=>{
+      const v = psVal(k);
+      rows.push(PS_LABELS[k].padEnd(14," ") + ": " + v);
+      total += v;
+    });
+    rows.push("");
+    rows.push("TOTAL UNITS   : " + total);
+    rows.push("");
+    rows.push("REMARKS:");
+    rows.push(document.getElementById("psRemarks").value.trim() || "  None");
+    rows.push("");
+    rows.push("Sent from Deck Ops Log");
+    return rows.join("\n");
+  }
+
+  function sendPreStow(){
+    if (!psState.port){ toast("Select port of loading first"); return; }
+    if (!psState.deck){ toast("Select Deck 3 or Deck 5 first"); return; }
+    const to = document.getElementById("psShip").value;
+    const d = new Date();
+    const subject = "Pre-Stow - " + psState.port + " - " + psState.deck + " - " +
+      d.toLocaleDateString("en-GB",{day:"2-digit", month:"short", year:"numeric"});
+    window.location.href = "mailto:" + to +
+      "?subject=" + encodeURIComponent(subject) +
+      "&body=" + encodeURIComponent(buildPreStow());
+  }
+
+  function resetPreStow(){
+    if (!confirm("Clear the pre-stow figures?")) return;
+    psState.deck = null;
+    psState.port = null;
+    document.querySelectorAll("#psPortSeg button").forEach(b=>b.classList.remove("on"));
+    Object.keys(PS_LABELS).forEach(k=>{
+      document.getElementById("ps_"+k).value = "";
+    });
+    document.getElementById("psTotal").textContent = "0";
+    document.querySelectorAll("#psDeckSeg button").forEach(b=>b.classList.remove("on"));
+    document.getElementById("psRemarks").value = "";
+    toast("Pre-stow cleared");
+  }
+
+  // start on home: hide send bar until a view is chosen
+  document.querySelector(".sendbar").style.display = "none";
+
   // ---------- state (in memory for this crossing) ----------
   const state = {
     deck: null,
+    port: null,
     stamps: {},          // id -> "HH:MM"
     counts: {out:0, in:0, tugs:0},
     issues: [],          // {t:"HH:MM", label:""}
   };
+
+  document.querySelectorAll("#portSeg button").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      state.port = b.dataset.port;
+      document.querySelectorAll("#portSeg button").forEach(x=>x.classList.toggle("on", x===b));
+      buzz();
+    });
+  });
 
   const STAMP_LABELS = {
     s_dis_start:"Start discharging", s_dis_end:"Finish discharging",
@@ -432,6 +687,7 @@
     const rows = [
       "CARGO OPERATIONS REPORT",
       "Date: " + dateStr,
+      "Port of loading: " + (state.port || "not selected"),
       "Deck: " + (state.deck || "not selected"),
       "",
       "DISCHARGING: " + line("s_dis_start","s_dis_end"),
@@ -457,10 +713,12 @@
   }
 
   document.getElementById("sendBtn").addEventListener("click", ()=>{
+    if (currentView === "prestow"){ sendPreStow(); return; }
+    if (!state.port){ toast("Select port of loading first"); return; }
     if (!state.deck){ toast("Select Deck 3 or Deck 5 first"); return; }
     const to = document.getElementById("ship").value;
     const d = new Date();
-    const subject = "Cargo Ops Report - " + state.deck + " - " +
+    const subject = "Cargo Ops Report - " + state.port + " - " + state.deck + " - " +
       d.toLocaleDateString("en-GB",{day:"2-digit", month:"short", year:"numeric"});
     const href = "mailto:" + to +
       "?subject=" + encodeURIComponent(subject) +
@@ -470,9 +728,11 @@
 
   // ---------- reset ----------
   document.getElementById("resetBtn").addEventListener("click", ()=>{
-    if (!confirm("Clear everything?")) return;
-    state.deck = null; state.stamps = {}; state.issues = [];
+    if (currentView === "prestow"){ resetPreStow(); return; }
+    if (!confirm("Clear everything for the next crossing?")) return;
+    state.deck = null; state.port = null; state.stamps = {}; state.issues = [];
     state.counts = {out:0, in:0, tugs:0};
+    document.querySelectorAll("#portSeg button").forEach(b=>b.classList.remove("on"));
     document.querySelectorAll("#deckSeg button").forEach(b=>b.classList.remove("on"));
     document.querySelectorAll(".stamp").forEach(b=>{
       b.classList.remove("done","arm");
