@@ -749,7 +749,7 @@
   // ---------- reset ----------
   document.getElementById("resetBtn").addEventListener("click", ()=>{
     if (currentView === "prestow"){ resetPreStow(); return; }
-    if (!confirm("Clear everything for the next crossing?")) return;
+    if (!confirm("Clear everything for the next loading?")) return;
     state.deck = null; state.port = null; state.stamps = {}; state.issues = [];
     state.counts = {out:0, in:0, tugs:0};
     document.querySelectorAll("#portSeg button").forEach(b=>b.classList.remove("on"));
